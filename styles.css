@@ -1,0 +1,132 @@
+/* styles.css */
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+.wrap {
+    font-family: "Raleway", sans-serif;
+}
+
+.wrap h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+
+    font-family: "Raleway", sans-serif;
+}
+
+.wrap h2 {
+    font-size: 16px;
+    margin-top: 30px;
+    color: #444;
+    font-family: "Raleway", sans-serif;
+}
+
+.gitbox {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+
+button.button-primary {
+    background-color: #0073aa;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+button.button-primary:hover {
+    background-color: #005f8d;
+}
+
+input[type="text"] {
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    width: 300px;
+}
+
+form {
+    padding: 0px;
+    margin-top: 20px;
+}
+
+.wp-core-ui .button,
+.wp-core-ui .button-secondary,
+.wp-core-ui .button,
+.wp-core-ui .button-secondary:hover,
+.wp-core-ui .button-primary,
+.wp-core-ui .button-primary:hover {
+    background-color: #60149d;
+    border: 0;
+    border-radius: 0;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    gap: 10px;
+    color: #fff !important;
+}
+
+.message-box.success {
+    padding: 0 30px;
+    border: 1px solid #19c50c;
+    margin-bottom: 10px;
+    background-color: #42ff0026;
+    font-weight: 500;
+}
+
+.message-box.success p {
+    font-size: 16px;
+    color: #16790e;
+}
+
+form label {
+    vertical-align: middle;
+    display: block;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+form input[type="submit"] {
+    background-color: #60149d;
+    border: 0;
+    border-radius: 0;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    gap: 10px;
+    color: #fff !important;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    -ms-border-radius: 0;
+    -o-border-radius: 0;
+    margin-bottom: 10px;
+    display: inline-block;
+    padding: 17px 20px;
+}
+
+select {
+    height: 55px;
+    border-radius: 0 !important;
+    padding: 0 20px !important;
+    -moz-border-radius: 0;
+    -ms-border-radius: 0;
+    -o-border-radius: 0;
+}
+
+form input[type="submit"]:hover {
+    background-color: #60149d;
+}
+
+hr {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #ddd;
+}

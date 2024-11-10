@@ -25,51 +25,6 @@ function github_sync_menu() {
     );
 }
 
-// Display the plugin options page
-function github_sync_page() {
-    ?>
-<div class="wrap">
-    <h1>GitHub Sync Settings</h1>
-
-    <?php if (!github_sync_is_connected()) : ?>
-    <p>To sync your repositories, connect your GitHub account:</p>
-    <a href="<?php echo github_sync_get_oauth_url(); ?>" class="button button-primary">Connect to GitHub</a>
-    <?php else : ?>
-    <p>Your GitHub account is connected. You can now sync your repositories.</p>
-    <form method="post">
-        <input type="submit" name="disconnect" value="Disconnect GitHub" class="button button-secondary" />
-    </form>
-
-    <hr>
-    <h2>Currently Connected Repository</h2>
-    <p><strong>Repo Name:</strong> <?php echo esc_html(get_option('github_sync_selected_repo', 'None')); ?></p>
-    <p><strong>Last Synced:</strong> <?php echo esc_html(get_option('github_sync_last_synced', 'Never')); ?></p>
-    <?php endif; ?>
-
-    <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['disconnect'])) {
-            github_sync_disconnect(); 
-        } ?>
-
-    <hr>
-    <h2>Sync Repositories</h2>
-    <?php github_sync_repositories_ui(); ?>
-
-    <hr>
-    <h2>GitHub OAuth Settings</h2>
-    <form method="post">
-        <label for="github_client_id">Client ID:</label>
-        <input type="text" id="github_client_id" name="github_client_id"
-            value="<?php echo esc_attr(get_option('github_sync_client_id')); ?>" />
-        <br><br>
-        <label for="github_client_secret">Client Secret:</label>
-        <input type="text" id="github_client_secret" name="github_client_secret"
-            value="<?php echo esc_attr(get_option('github_sync_client_secret')); ?>" />
-        <br><br>
-        <input type="submit" name="save_github_credentials" value="Save Credentials" class="button button-primary" />
-    </form>
-</div>
-<?php
-}
 
 // Register plugin settings
 add_action('admin_init', 'github_sync_register_settings');
@@ -158,7 +113,7 @@ function github_sync_get_repositories() {
 function github_sync_repositories_ui() {
     $repos = github_sync_get_repositories();
     if (empty($repos)) {
-        echo '<p>No repositories found or you need to connect GitHub.</p>';
+        echo '<p>No repositories found.</p>';
         return;
     }
 
@@ -231,7 +186,7 @@ if (isset($_GET['page']) && $_GET['page'] === 'github-sync') {
 if (isset($_POST['save_github_credentials'])) {
     update_option('github_sync_client_id', sanitize_text_field($_POST['github_client_id']));
     update_option('github_sync_client_secret', sanitize_text_field($_POST['github_client_secret']));
-    echo '<p>Credentials saved successfully.</p>';
+
 }
 
 
@@ -263,4 +218,101 @@ setInterval(function() {
 </script>
 <?php
 }
+
+
+
+// Display the plugin options page
+function github_sync_page() {
+    ?>
+<div class="wrap">
+
+    <?php 
+if (isset($_POST['save_github_credentials'])) {
+        ?>
+    <div class="message-box success">
+        <p>Credentials saved successfully.</p>
+    </div>
+    <?php
+}
+
+?>
+
+    <div class="github-authsettings gitbox">
+        <h1>GitHub OAuth Settings</h1>
+        <form method="post">
+            <label for="github_client_id">Client ID:</label>
+            <input type="text" id="github_client_id" name="github_client_id"
+                value="<?php echo esc_attr(get_option('github_sync_client_id')); ?>" />
+            <br><br>
+            <label for="github_client_secret">Client Secret:</label>
+            <input type="text" id="github_client_secret" name="github_client_secret"
+                value="<?php echo esc_attr(get_option('github_sync_client_secret')); ?>" />
+            <br><br>
+            <input type="submit" name="save_github_credentials" value="Save Credentials"
+                class="button button-primary" />
+        </form>
+
+        <?php if(empty(get_option('github_sync_client_id')) && empty(get_option('github_sync_client_secret'))): ?>
+        <p>Create Auth App On Your Github Account: <a href="https://github.com/settings/developers" target="_blank">Get
+                Auth
+                Details</a></p>
+        <?php else: ?>
+        <p>Github App Cliend ID and Secret is saved, Authourize your account and sync your theme repo</p>
+        <?php endif; ?>
+    </div>
+
+
+
+    <div class="github-authourization gitbox">
+
+        <h1>GitHub Sync Settings</h1>
+
+        <?php if (!github_sync_is_connected()) : ?>
+        <p>To sync your repositories, connect your GitHub account:</p>
+        <a href="<?php echo github_sync_get_oauth_url(); ?>" class="button button-primary"> <span
+                class="dashicons dashicons-lock"></span> Authorize GitHub</a>
+        <?php else : ?>
+        <p>Your GitHub account is connected. You can now sync your repositories.</p>
+        <form method="post">
+            <input type="submit" name="disconnect" value="Disconnect GitHub" class="button button-secondary" />
+        </form>
+
+    </div>
+
+
+    <div class="github-synced-theme gitbox">
+        <h1>Currently Connected Repository</h1>
+        <p><strong>Repo Name:</strong> <?php echo esc_html(get_option('github_sync_selected_repo', 'None')); ?></p>
+        <p><strong>Last Synced:</strong> <?php echo esc_html(get_option('github_sync_last_synced', 'Never')); ?></p>
+        <?php endif; ?>
+
+        <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['disconnect'])) {
+            github_sync_disconnect(); 
+        } ?>
+
+
+
+    </div>
+
+    <div class="github-repuiList gitbox">
+        <h1>Sync Repositories</h1>
+        <?php github_sync_repositories_ui(); ?>
+    </div>
+
+
+</div>
+<?php
+}
+
+
+// Enqueue custom admin styles for the plugin
+function github_sync_enqueue_styles() {
+    // Ensure this is only for the plugin's settings page
+    $screen = get_current_screen();
+    if ($screen->id === 'toplevel_page_github-sync') {
+        wp_enqueue_style('github-sync-styles', plugin_dir_url(__FILE__) . 'styles.css');
+    }
+}
+add_action('admin_enqueue_scripts', 'github_sync_enqueue_styles');
+
 ?>
