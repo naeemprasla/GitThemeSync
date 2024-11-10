@@ -2,7 +2,7 @@
 /*
 Plugin Name: GitHub Sync
 Description: Sync GitHub repository with WordPress theme.
-Version: 1.2
+Version: 1.4
 Author: Your Name
 */
 
@@ -39,6 +39,11 @@ function github_sync_page() {
     <form method="post">
         <input type="submit" name="disconnect" value="Disconnect GitHub" class="button button-secondary" />
     </form>
+
+    <hr>
+    <h2>Currently Connected Repository</h2>
+    <p><strong>Repo Name:</strong> <?php echo esc_html(get_option('github_sync_selected_repo', 'None')); ?></p>
+    <p><strong>Last Synced:</strong> <?php echo esc_html(get_option('github_sync_last_synced', 'Never')); ?></p>
     <?php endif; ?>
 
     <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['disconnect'])) {
@@ -48,6 +53,20 @@ function github_sync_page() {
     <hr>
     <h2>Sync Repositories</h2>
     <?php github_sync_repositories_ui(); ?>
+
+    <hr>
+    <h2>GitHub OAuth Settings</h2>
+    <form method="post">
+        <label for="github_client_id">Client ID:</label>
+        <input type="text" id="github_client_id" name="github_client_id"
+            value="<?php echo esc_attr(get_option('github_sync_client_id')); ?>" />
+        <br><br>
+        <label for="github_client_secret">Client Secret:</label>
+        <input type="text" id="github_client_secret" name="github_client_secret"
+            value="<?php echo esc_attr(get_option('github_sync_client_secret')); ?>" />
+        <br><br>
+        <input type="submit" name="save_github_credentials" value="Save Credentials" class="button button-primary" />
+    </form>
 </div>
 <?php
 }
@@ -57,13 +76,15 @@ add_action('admin_init', 'github_sync_register_settings');
 function github_sync_register_settings() {
     register_setting('github_sync_options_group', 'github_sync_client_id');
     register_setting('github_sync_options_group', 'github_sync_client_secret');
+    register_setting('github_sync_options_group', 'github_sync_selected_repo');
+    register_setting('github_sync_options_group', 'github_sync_last_synced');
 }
 
 // GitHub OAuth authentication URL
 function github_sync_get_oauth_url() {
     $client_id = get_option('github_sync_client_id');
-    $redirect_uri = admin_url('admin.php?page=github-sync'); // Redirect URI after OAuth
-    $scope = 'repo';  // Define the scope for repositories
+    $redirect_uri = admin_url('admin.php?page=github-sync');
+    $scope = 'repo';
     return "https://github.com/login/oauth/authorize?client_id={$client_id}&redirect_uri={$redirect_uri}&scope={$scope}";
 }
 
@@ -95,9 +116,7 @@ function github_sync_handle_oauth_callback() {
 
         if (isset($data['access_token'])) {
             update_option('github_sync_token', $data['access_token']);
-            // Fetch GitHub username and store it
             github_sync_get_github_username($data['access_token']);
-            echo '<p>GitHub connected successfully! You can now sync your repositories.</p>';
         }
     }
 }
@@ -153,98 +172,95 @@ function github_sync_repositories_ui() {
     echo '</form>';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['repo'])) {
-        github_sync_clone_repo($_POST['repo']);
+        $repo_name = sanitize_text_field($_POST['repo']);
+        update_option('github_sync_selected_repo', $repo_name);
+        github_sync_clone_repo($repo_name);
     }
 }
+
 // Clone or pull selected repository into WordPress theme folder
 function github_sync_clone_repo($repo_name) {
-    // Get the GitHub username from options
     $username = get_option('github_sync_username');
     if (!$username) {
         echo '<p>Error: GitHub username not found. Please authenticate again.</p>';
         return;
     }
 
-    $theme_directory = get_theme_root() . '/your-theme-folder/';
-    
-    // Define the GitHub repository URL
+    $theme_directory = get_theme_root() . '/' . $repo_name . '/';
     $repo_url = 'https://github.com/' . $username . '/' . $repo_name . '.git';
 
-    // Set the path where the repository will be cloned
-    $temp_clone_dir = sys_get_temp_dir() . '/github_repo_clone/';
-
-    // Clone the repository into a temporary directory
-    $clone_command = 'git clone ' . escapeshellarg($repo_url) . ' ' . escapeshellarg($temp_clone_dir);
-
-    // Run the git clone command
-    $output = [];
-    $return_var = 0;
-    exec($clone_command, $output, $return_var);
-
-    if ($return_var !== 0) {
-        echo '<p>Error cloning repository. Git command failed.</p>';
-        return;
+    if (!is_dir($theme_directory)) {
+        mkdir($theme_directory, 0755, true);
     }
 
-    // If the clone was successful, move the contents to the theme folder
-    try {
-        // Move the repository contents into the theme directory (excluding the parent folder)
-        $repo_folder = $temp_clone_dir . '/' . $repo_name . '-main'; // Adjust this based on your repo structure
-        if (is_dir($repo_folder)) {
-            // Use PHP's built-in function to move files/folders
-            $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($repo_folder, RecursiveDirectoryIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::CHILD_FIRST
-            );
-
-            foreach ($files as $fileinfo) {
-                $todo = ($fileinfo->isDir() ? 'mkdir' : 'copy');
-                $dest = $theme_directory . DIRECTORY_SEPARATOR . $fileinfo->getSubPathName();
-                if ($todo === 'mkdir' && !is_dir($dest)) {
-                    mkdir($dest, 0777, true);
-                } else if ($todo === 'copy') {
-                    copy($fileinfo, $dest);
-                }
-            }
-            echo '<p>Repository synced successfully!</p>';
+    if (is_dir($theme_directory . '/.git')) {
+        exec("cd " . escapeshellarg($theme_directory) . " && git pull 2>&1", $output, $return_var);
+        if ($return_var === 0) {
+            echo '<p>Repository updated successfully!</p>';
+        } else {
+            echo '<p>Error updating repository: ' . implode("\n", $output) . '</p>';
         }
-    } catch (Exception $e) {
-        echo '<p>Error moving repository files: ' . $e->getMessage() . '</p>';
+    } else {
+        exec("git clone " . escapeshellarg($repo_url) . " " . escapeshellarg($theme_directory) . " 2>&1", $output, $return_var);
+        if ($return_var === 0) {
+            echo '<p>Repository cloned successfully into theme folder!</p>';
+        } else {
+            echo '<p>Error cloning repository: ' . implode("\n", $output) . '</p>';
+        }
     }
 
-    // Clean up: Remove the temporary cloned repo directory
-    // Be sure to remove the directory if it exists
-    $this->delete_directory($temp_clone_dir);
+    // Save last synced time immediately after syncing
+    update_option('github_sync_last_synced', current_time('mysql'));
 }
-
-// Helper function to delete a directory recursively
-function delete_directory($dir) {
-    if (!is_dir($dir)) {
-        return false;
-    }
-    
-    $files = array_diff(scandir($dir), array('.', '..'));
-    foreach ($files as $file) {
-        $file_path = $dir . DIRECTORY_SEPARATOR . $file;
-        (is_dir($file_path)) ? delete_directory($file_path) : unlink($file_path);
-    }
-    
-    return rmdir($dir);
-}
-
-
-
 
 // Disconnect GitHub (clear token and username)
 function github_sync_disconnect() {
     delete_option('github_sync_token');
     delete_option('github_sync_username');
+    delete_option('github_sync_selected_repo');
+    delete_option('github_sync_last_synced');
     echo '<p>Your GitHub account has been disconnected.</p>';
 }
 
-// Handle OAuth callback (after user authorizes the app)
+// Handle OAuth callback
 if (isset($_GET['page']) && $_GET['page'] === 'github-sync') {
     github_sync_handle_oauth_callback();
 }
 
+// Save GitHub Client ID and Client Secret
+if (isset($_POST['save_github_credentials'])) {
+    update_option('github_sync_client_id', sanitize_text_field($_POST['github_client_id']));
+    update_option('github_sync_client_secret', sanitize_text_field($_POST['github_client_secret']));
+    echo '<p>Credentials saved successfully.</p>';
+}
+
+
+
+// AJAX sync handler
+add_action('wp_ajax_github_sync_update', 'github_sync_update');
+function github_sync_update() {
+    $repo_name = get_option('github_sync_selected_repo');
+    if ($repo_name) {
+        github_sync_clone_repo($repo_name);
+    }
+    wp_die();
+}
+
+// JavaScript for periodic AJAX requests
+add_action('admin_footer', 'github_sync_js');
+function github_sync_js() {
+    ?>
+<script>
+setInterval(function() {
+    jQuery.ajax({
+        url: '<?php echo admin_url("admin-ajax.php"); ?>',
+        method: 'POST',
+        data: {
+            action: 'github_sync_update'
+        }
+    });
+}, 5000); // 300000ms = 5 minutes
+</script>
+<?php
+}
 ?>
