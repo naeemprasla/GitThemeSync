@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: GitHub Sync
-Description: Sync GitHub repository with WordPress theme.
+Plugin Name: GitHub Sync (Wp Theme)
+Description: Sync GitHub Wp Theme with wordpress
 Version: 1.4
-Author: Your Name
+Author: Naeem Prasla
 */
 
 // Prevent direct access
@@ -117,10 +117,20 @@ function github_sync_repositories_ui() {
         return;
     }
 
+    
+    
+
     echo '<form method="post">';
     echo '<select name="repo" required>';
+
+
+
     foreach ($repos as $repo) {
-        echo '<option value="' . esc_attr($repo['name']) . '">' . esc_html($repo['name']) . '</option>';
+        if($repo['name'] == get_option('github_sync_selected_repo') ){
+            echo '<option value="' . esc_attr($repo['name']) . '"   selected   >' . esc_html($repo['name']) . '</option>';
+        }
+        
+        echo '<option value="' . esc_attr($repo['name']) . '"      >' . esc_html($repo['name']) . '</option>';
     }
     echo '</select>';
     echo '<input type="submit" value="Sync Repo">';
@@ -239,19 +249,6 @@ if (isset($_POST['save_github_credentials'])) {
 
     <div class="github-authsettings gitbox">
         <h1>GitHub OAuth Settings</h1>
-        <form method="post">
-            <label for="github_client_id">Client ID:</label>
-            <input type="text" id="github_client_id" name="github_client_id"
-                value="<?php echo esc_attr(get_option('github_sync_client_id')); ?>" />
-            <br><br>
-            <label for="github_client_secret">Client Secret:</label>
-            <input type="text" id="github_client_secret" name="github_client_secret"
-                value="<?php echo esc_attr(get_option('github_sync_client_secret')); ?>" />
-            <br><br>
-            <input type="submit" name="save_github_credentials" value="Save Credentials"
-                class="button button-primary" />
-        </form>
-
         <?php if(empty(get_option('github_sync_client_id')) && empty(get_option('github_sync_client_secret'))): ?>
         <p>Create Auth App On Your Github Account: <a href="https://github.com/settings/developers" target="_blank">Get
                 Auth
@@ -259,10 +256,23 @@ if (isset($_POST['save_github_credentials'])) {
         <?php else: ?>
         <p>Github App Cliend ID and Secret is saved, Authourize your account and sync your theme repo</p>
         <?php endif; ?>
+        <form method="post">
+            <label for="github_client_id">Client ID:</label>
+            <input type="text" id="github_client_id" name="github_client_id"
+                value="<?php echo esc_attr(get_option('github_sync_client_id')); ?>" />
+            <br><br>
+            <label for="github_client_secret">Client Secret:</label>
+            <input type="password" id="github_client_secret" name="github_client_secret"
+                value="<?php echo esc_attr(get_option('github_sync_client_secret')); ?>" />
+            <br><br>
+            <input type="submit" name="save_github_credentials" value="Connect Git App" class="button button-primary" />
+        </form>
+
+
     </div>
 
 
-
+    <?php if(!empty(get_option('github_sync_client_id')) && !empty(get_option('github_sync_client_secret'))): ?>
     <div class="github-authourization gitbox">
 
         <h1>GitHub Sync Settings</h1>
@@ -278,8 +288,21 @@ if (isset($_POST['save_github_credentials'])) {
         </form>
 
     </div>
+    <?php endif; ?>
+
+    <div class="github-repuiList gitbox">
+        <h1>Sync Repositories</h1>
+        <?php if(empty(get_option('github_sync_selected_repo'))): ?>
+        <p>Sync your Repository. </p>
+        <?php else: ?>
+        <p>Responsitory already Connected. </p>
+        <?php endif; ?>
+
+        <?php github_sync_repositories_ui(); ?>
+    </div>
 
 
+    <?php if(!empty(get_option('github_sync_selected_repo'))): ?>
     <div class="github-synced-theme gitbox">
         <h1>Currently Connected Repository</h1>
         <p><strong>Repo Name:</strong> <?php echo esc_html(get_option('github_sync_selected_repo', 'None')); ?></p>
@@ -293,11 +316,8 @@ if (isset($_POST['save_github_credentials'])) {
 
 
     </div>
+    <?php endif; ?>
 
-    <div class="github-repuiList gitbox">
-        <h1>Sync Repositories</h1>
-        <?php github_sync_repositories_ui(); ?>
-    </div>
 
 
 </div>

@@ -40,7 +40,8 @@ button.button-primary:hover {
     background-color: #005f8d;
 }
 
-input[type="text"] {
+input[type="text"],
+input[type="password"] {
     padding: 8px;
     font-size: 16px;
     border: 1px solid #ccc;
