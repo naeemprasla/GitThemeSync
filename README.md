@@ -32,3 +32,6 @@ This WordPress plugin allows you to automatically sync a theme from a GitHub rep
 - Click Sync Repository to clone the repository into the WordPress theme folder.
 #### Step 4: Scheduled Updates
 - The plugin will automatically update the theme every 5 sec. The last sync date and time are displayed on the settings page.
+
+#Screenshot
+https://tinyurl.com/2y7pzowy
