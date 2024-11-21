@@ -34,4 +34,5 @@ This WordPress plugin allows you to automatically sync a theme from a GitHub rep
 - The plugin will automatically update the theme every 10 sec. The last sync date and time are displayed on the settings page and dashboard widget
 
 ## Screenshot
-- Dashboard: https://tinyurl.com/2y7pzowy
+- Dashboard Page Option: https://tinyurl.com/26qv4bty
+- Dashboard Widget: https://tinyurl.com/25cxak2r
