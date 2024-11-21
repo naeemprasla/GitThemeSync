@@ -322,12 +322,6 @@ if (isset($_POST['save_github_credentials'])) {
             github_sync_disconnect(); 
         } ?>
 
-        <div class="git-message info">
-            <p><b>Note:</b> Keep this tab open. if you close this tab function will not sync the latest update from git
-                repo</p>
-        </div>
-
-
 
     </div>
     <?php endif; ?>
