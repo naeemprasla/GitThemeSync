@@ -200,35 +200,44 @@ if (isset($_POST['save_github_credentials'])) {
 }
 
 
+// Add a custom interval (10 seconds).
+add_filter('cron_schedules', function ($schedules) {
+    $schedules['ten_seconds'] = ['interval' => 10, 'display' => __('Every 10 Seconds')];
+    return $schedules;
+});
 
-// AJAX sync handler
-add_action('wp_ajax_github_sync_update', 'github_sync_update');
-function github_sync_update() {
+// Schedule the cron job on activation.
+register_activation_hook(__FILE__, function () {
+    if (!wp_next_scheduled('github_theme_sync')) {
+        wp_schedule_event(time(), 'ten_seconds', 'github_theme_sync');
+    }
+});
+
+// Clear the cron job on deactivation.
+register_deactivation_hook(__FILE__, function () {
+    if ($timestamp = wp_next_scheduled('github_theme_sync')) {
+        wp_unschedule_event($timestamp, 'github_theme_sync');
+    }
+});
+
+// Sync the theme from GitHub and update the sync time.
+add_action('github_theme_sync', function () {
     $repo_name = get_option('github_sync_selected_repo');
     if ($repo_name) {
         github_sync_clone_repo($repo_name);
+        update_option('github_last_sync_time', current_time('mysql'));
     }
     wp_die();
-}
+});
 
-// JavaScript for periodic AJAX requests
-add_action('admin_footer', 'github_sync_js');
-function github_sync_js() {
-    ?>
-<script>
-setInterval(function() {
-    jQuery.ajax({
-        url: '<?php echo admin_url("admin-ajax.php"); ?>',
-        method: 'POST',
-        data: {
-            action: 'github_sync_update'
-        }
+// Add a dashboard widget to display the sync timer.
+add_action('wp_dashboard_setup', function () {
+    wp_add_dashboard_widget('github_sync_widget', 'GitHub Theme Sync Status', function () {
+        $last_sync = get_option('github_last_sync_time', 'No sync yet');
+        echo '<p>Last Sync Time: <strong>' . esc_html($last_sync) . '</strong></p>';
+        echo '<p>Next Sync in approximately 10 seconds.</p>';
     });
-}, 5000); // 300000ms = 5 minutes
-</script>
-<?php
-}
-
+});
 
 
 // Display the plugin options page
@@ -312,6 +321,11 @@ if (isset($_POST['save_github_credentials'])) {
         <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['disconnect'])) {
             github_sync_disconnect(); 
         } ?>
+
+        <div class="git-message info">
+            <p><b>Note:</b> Keep this tab open. if you close this tab function will not sync the latest update from git
+                repo</p>
+        </div>
 
 
 
