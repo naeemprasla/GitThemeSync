@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: GitHub Sync (Wp Theme)
+Plugin Name: Git Theme Sync (Wp Theme)
 Description: Sync GitHub Wp Theme with wordpress
 Version: 1.4
 Author: Naeem Prasla
