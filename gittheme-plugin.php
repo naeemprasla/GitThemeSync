@@ -4,6 +4,10 @@ Plugin Name: Git Theme Sync (Wp Theme)
 Description: Sync GitHub Wp Theme with wordpress
 Version: 1.4
 Author: Naeem Prasla
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+This WordPress plugin allows you to automatically sync a theme from a GitHub repository. Once set up, it can periodically update your selected theme from GitHub, keeping it up-to-date with your latest commits.
 */
 
 // Prevent direct access
