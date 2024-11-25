@@ -36,3 +36,7 @@ This WordPress plugin allows you to automatically sync a theme from a GitHub rep
 ## Screenshot
 - Dashboard Page Option: https://tinyurl.com/26qv4bty
 - Dashboard Widget: https://tinyurl.com/25cxak2r
+
+## License
+- License: GPLv2 or later
+- License URI: https://www.gnu.org/licenses/gpl-2.0.html
