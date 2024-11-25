@@ -1,7 +1,7 @@
-=== Plugin Name ===
-Contributors: (this should be a list of wordpress.org userid's)
+=== Git Theme Sync (Wp Theme) ===
+Contributors: naeemprasla
 Donate link: https://example.com/
-Tags: tag1, tag2
+Tags: github, wptheme
 Requires at least: 4.7
 Tested up to: 5.4
 Stable tag: 4.3
