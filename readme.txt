@@ -1,4 +1,5 @@
-=== Git Theme Sync (Wp Theme) ===
+=== Plugin Name ===
+Plugin Name: Git Theme Sync (Wp Theme)
 Contributors: naeemprasla
 Donate link: https://example.com/
 Tags: github, wptheme
